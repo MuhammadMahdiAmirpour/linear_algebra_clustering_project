@@ -20,17 +20,16 @@ def construct_affinity_matrix(data, affinity_type, *, k=3, sigma=1.0):
     - affinity_matrix: numpy array, the constructed affinity matrix based on the specified type.
     """
 
-    # TODO: Compute pairwise distances
 #     m,n = data.shape
 #     pairwise_distances = np.linalg.norm(np.tile(data.reshape((m,1,n)),(1,m,1)) - data,axis=2)
     n = data.shape[0]
     affinity_matrix = np.zeros((n, n))
-    pairwise_distances = np.linalg.norm(data[:, None] - data, axis=2)
+    # pairwise_distances = np.linalg.norm(data[:, None] - data, axis=2)
+    pairwise_distances = np.einsum('ij,ij->i',data,data)[:,None] + np.einsum('ij,ij->i',data,data) - 2*np.dot(data,data.T)
 
     if affinity_type == 'knn':
         # differences = data[:, :, np.newaxis] - data[:, np.newaxis, :]
         # pairwise_distances = np.sqrt(np.sum(differences**2, axis=1))
-        pairwise_distances = np.einsum('ij,ij->i',data,data)[:,None] + np.einsum('ij,ij->i',data,data) - 2*np.dot(data,data.T)
 
         # Ensure symmetry
         # symmetric_distances = 0.5 * (pairwise_distances + pairwise_distances.T)
@@ -41,14 +40,25 @@ def construct_affinity_matrix(data, affinity_type, *, k=3, sigma=1.0):
 #         differences = data[:, :, np.newaxis] - data[:, np.newaxis, :]
 #         pairwise_distances = np.sqrt(np.sum(differences**2, axis=0))
         # Get indices of k nearest neighbors for each vector
-        k_neighbors_indices = np.argsort(pairwise_distances, axis=1)[:, 1:k+1]
+        k_indices = np.argpartition(pairwise_distances, k+1, axis=1)[:, :k+1]
+        # results = [data[k_indices[i, :k+1]] for i in range(data.shape[0])]
+        affinity_matrix = np.zeros_like(pairwise_distances)
+        k_indices_array = np.array(k_indices)
+        affinity_matrix[k_indices_array, np.arange(n)[:, np.newaxis]] = 1
+        affinity_matrix[np.arange(n)[:, np.newaxis], k_indices_array] = 1
+#         for i, l in enumerate(k_indices):
+#             affinity_matrix[l, i] = 1
+#             affinity_matrix[i, l] = 1
+        return affinity_matrix
+        # k_neighbors_indices = np.argsort(pairwise_distances, axis=1)[:, 1:k+1]
 
         # Create a binary matrix indicating the neighbors
-        binary_matrix = np.zeros_like(pairwise_distances, dtype=int)
-        rows, cols = np.indices(binary_matrix.shape)
-        binary_matrix[rows, k_neighbors_indices] = 1
-
-        return binary_matrix
+#         binary_matrix = np.zeros_like(pairwise_distances, dtype=int)
+#         rows, cols = np.indices(binary_matrix.shape)
+#         binary_matrix[rows, k_neighbors_indices] = 1
+#         print(binary_matrix)
+# 
+#         return binary_matrix
         # return affinity_matrix
 #         # Compute pairwise distances without using sklearn
 # #         distances = np.sqrt(((data[:, np.newaxis] - data) ** 2).sum(axis=2))
@@ -98,8 +108,9 @@ if __name__ == "__main__":
     # TODO: Create and configure plot
     fig, plots = plt.subplots(3,4,figsize=(14,10))
     for i, ds_name in enumerate(datasets):
-        X = np.load("./datasets/%s/data.npy" % ds_name)
-        y = np.load("./datasets/%s/target.npy" % ds_name)
+        dataset = np.load("datasets/%s.npz" % ds_name)
+        X = dataset['data']     # feature points
+        y = dataset['target']   # ground truth labels
         
         n = len(np.unique(y)) # number of clusters
         k = 4
