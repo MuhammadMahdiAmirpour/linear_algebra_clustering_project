@@ -13,15 +13,8 @@ def laplacian(A):
     - L_sym: numpy array, symmetric normalized Laplacian matrix.
     """
 
-    m = A.shape[0]
-    # TODO: Calculate degree matrix
     D = A.sum(axis=1)
-
-    # TODO: Calculate the inverse square root of the symmetric matrix
     D_inv_sqrt = np.sqrt(LA.inv(np.diag(D)))
-
-    # TODO: Return symmetric normalized Laplacian matrix
-
     return np.eye(A.shape[0]) - (D_inv_sqrt @ A @ D_inv_sqrt)
 
 
@@ -37,50 +30,11 @@ def spectral_clustering(affinity, k):
     - labels: numpy array, cluster labels assigned by the spectral clustering algorithm.
     """
 
-    # TODO: Compute Laplacian matrix
     L = laplacian(affinity)
-
-    # TODO: Compute the first k eigenvectors of the Laplacian matrix
-    eigenvalues, eigenvectors = LA.eig(L)
-    eigenvectors = eigenvectors[:, np.argsort(eigenvalues)[:k]]
-
-    # Combine eigenvectors and eigenvalues into a 2D array
-    # combined_array = np.column_stack((eigenvectors.T, eigenvalues))
-
-    # Sort the combined array based on eigenvalues
-    # sorted_combined_array = combined_array[combined_array[:, -1].argsort()]
-
-    # Extract the first k eigenvectors
-    # selected_eigenvectors = sorted_combined_array[:, :-1][:, :k]
-
-    labels = k_means_clustering(eigenvectors, k)[0]
-
+    eigvals, eigvecs = LA.eig(L)
+    eigvecs = eigvecs[:, np.argsort(eigvals)[:k]]
+    labels = k_means_clustering(eigvecs, k)[0]
     return labels
-
-#     print(eigenvectors)
-#     for eigenvalue, eigenvector in zip(eigenvalues, eigenvectors):
-#         print("---------------------------------------------------------------------------------------------")
-#         print(eigenvalue)
-#         print(eigenvector)
-#         print(np.linalg.norm(eigenvector))
-#         print("---------------------------------------------------------------------------------------------")
-#     eigenvectors = eigenvectors[:, np.argsort(eigenvalues, axis=-1)][-k:]
-#     print("***********************************************************************************************************")
-#     for eigenvalue, eigenvector in zip(eigenvalues, eigenvectors):
-#         print("---------------------------------------------------------------------------------------------")
-#         print(eigenvalue)
-#         print(eigenvector)
-#         print(np.linalg.norm(eigenvector))
-#         print("---------------------------------------------------------------------------------------------")
- 
-    # TODO: Apply K-means clustering on the selected eigenvectors
-#     labels = k_means_clustering(eigenvectors.T, k)[0]
-#     U, _, _ = LA.svd(L, full_matrices=False)
-#     first_k_eig_vecs = U[:, -k:]
-#     labels, centroids = k_means_clustering(first_k_eig_vecs, k)
-#     # TODO: Return cluster labels
-#     return labels
-
 
 if __name__ == "__main__":
     from sklearn.datasets import make_blobs
