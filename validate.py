@@ -48,8 +48,8 @@ if __name__ == "__main__":
         y = dataset['target']   # ground truth labels
         
         n = len(np.unique(y)) # number of clusters
-        k = 4
-        sigma = 1.0
+        k = 10
+        sigma = 10.0
 
         y_km, _ = k_means_clustering(X, n)
 
