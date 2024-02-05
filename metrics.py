@@ -5,9 +5,8 @@ import math
 def create_contingency_table(X,Y):
 
     unique_labels = np.unique(X)
-    XS = []
-    XS = [np.where(X == label)[0].tolist() for label in unique_labels]
-    XS_vectorized = np.where(X[:, None] == unique_labels[None, :])[1].tolist()
+    XS = [list(np.where(X == label)[0]) for label in unique_labels]
+    # XS = np.where(X[:, None] == unique_labels[None, :])[1].tolist()
     unique_labels = np.unique(Y)
     YS = [np.where(Y == label)[0].tolist() for label in unique_labels]
     contingency_table = []
